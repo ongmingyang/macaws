@@ -3,7 +3,9 @@ SCREEN_HEIGHT = window.innerHeight,
 SCREEN_WIDTH_HALF = SCREEN_WIDTH  / 2,
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2;
 
-var camera, scene, renderer, light, bird;
+var camera, scene, renderer, light, bird, boid, plane;
+
+var controls, gridHelper;
 
 var mouseX = mouseY = 0;
 
@@ -11,12 +13,18 @@ init();
 render();
 
 function init() {
-  camera = new THREE.PerspectiveCamera( 75, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 1000 );
-  camera.position.y = 5;
-  camera.position.z = 15;
+  // Camera
+  camera = new THREE.PerspectiveCamera( 45, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 10000 );
+  camera.position.set( 100, 50, 100 );
+  camera.lookAt( 0, 0, 0 );
 
+  // Scene
   scene = new THREE.Scene();
+  scene.fog = new THREE.Fog( 0xffffff, 100 );
+  gridHelper = new THREE.GridHelper( 100, 10 );    
+  //scene.add( gridHelper );
 
+  // Birds
   geometry = new Bird();
   material = new THREE.MeshLambertMaterial({
       color: 0x3366ff,
@@ -24,19 +32,53 @@ function init() {
       //wireframe: true
       });
   bird = new THREE.Mesh( geometry, material );
+  bird.castShadow = true;
   bird.phase = 0;
   scene.add( bird );
 
-  light = new THREE.DirectionalLight( 0xffddcc, 0.5 );
-  light.position.set( 0, 55, 10 );
+  // Boids
+  boid = new Boid();
+
+  // Ground texture
+  plane = new THREE.PlaneGeometry( 20000, 20000 );
+  groundTexture = THREE.ImageUtils.loadTexture( 'textures/grass.jpg' );
+  groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
+  groundTexture.repeat.set( 25, 25 );
+  groundTexture.anisotropy = 16;
+  groundMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x335533, 
+      specular: 0x111111,
+      map: groundTexture 
+      });
+  planeMesh = new THREE.Mesh( plane, groundMaterial );
+  planeMesh.rotation.x = - Math.PI / 2;
+  planeMesh.scale.set( 0.1, 0.1, 0.1 );
+  planeMesh.receiveShadow = true;
+  scene.add( planeMesh );
+
+  // Light
+  light = new THREE.DirectionalLight( 0xffddcc, 1.5 );
+  light.position.set( 0, 150, 10 );
+  light.castShadow = true;
+  light.shadowCameraVisible = true;
+  d = 200;
+  light.shadowCameraLeft = -d;
+  light.shadowCameraRight = d;
+  light.shadowCameraTop = d;
+  light.shadowCameraBottom = -d;
+  light.shadowCameraFar = 500;
   scene.add( light );
   scene.add( new THREE.AmbientLight( 0x404040 ) );
 
+  // Renderer
   renderer = new THREE.WebGLRenderer();
   renderer.setClearColor( 0xffffff );
   renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+  renderer.shadowMapEnabled = true;
   document.body.appendChild( renderer.domElement );
 
+  // Browser controls
+  controls = new THREE.OrbitControls( camera, renderer.domElement );
   window.addEventListener( 'resize', onWindowResize, false );
   document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
@@ -58,9 +100,27 @@ function render() {
   renderer.render(scene, camera);
   bird.geometry.verticesNeedUpdate = true;
 
+  // Render birds
+  if (Math.random() > 0.99) {
+    x = Math.random()/500 - 1/1000;
+    y = Math.random()/500 - 1/1000;
+    z = Math.random()/500 - 1/1000;
+  } else {
+    x = y = z = 0;
+  }
+
+  centripetal = new THREE.Vector3();
+  centripetal.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
+  centripetal.divideScalar(80);
+  boid.move( centripetal );
+  orientate( bird, boid );
   bird.phase = (bird.phase + 0.05) % 62.83; // 20 pi
   flap(bird);
+
+  // Render camera
+  /*
   camera.position.x += ( mouseX - camera.position.x ) * .03;
   camera.position.y += ( - mouseY - camera.position.y ) * .03;
   camera.lookAt( bird.position );
+  */
 }

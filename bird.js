@@ -1,3 +1,5 @@
+var BIRD_WEIGHT = 0.02;
+
 var Bird = function () {
 
   var scope = this;
@@ -105,4 +107,24 @@ function flap( bird ) {
   bird.geometry.vertices[ 11 ].y = bird.geometry.vertices[ 13 ].y = - lagw * 0.15;
   bird.geometry.vertices[ 1 ].y = bird.geometry.vertices[ 3 ].y = - h * 0.2 - 1;
 
+}
+
+function orientate( bird, boid ) {
+  // Move
+  bird.position.copy( boid.position );
+
+  // Yaw
+  bird.rotation.y = Math.atan2( - boid.velocity.z, boid.velocity.x );
+
+  // Pitch
+  bird.rotation.z = Math.asin( boid.velocity.y / boid.velocity.length() );
+
+  // Bank
+  centripetal_vector = new THREE.Vector3();
+  centripetal_vector.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
+  centrifugal_scalar = boid.acceleration.dot( centripetal_vector.normalize() );
+  bird.rotation.x = Math.atan2( centrifugal_scalar, BIRD_WEIGHT );
+
+  // Yaw and Pitch before Banking
+  bird.rotation.order = 'YZX';
 }
