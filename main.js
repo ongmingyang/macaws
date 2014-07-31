@@ -1,10 +1,11 @@
 var SCREEN_WIDTH = window.innerWidth,
 SCREEN_HEIGHT = window.innerHeight,
 SCREEN_WIDTH_HALF = SCREEN_WIDTH  / 2,
-SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2;
+SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2,
+TOTAL_BIRDS = 15;
 
 var camera, scene, renderer, light, plane,
-    bird, birds, boid, boids;
+    bird, birds, boid, boids, obstacles;
 
 var controls, gridHelper;
 
@@ -14,27 +15,25 @@ init();
 render();
 
 function init() {
+  birds = [];
+  boids = [];
+  obstacles = [];
+
   // Camera
   camera = new THREE.PerspectiveCamera( 45, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 10000 );
-  camera.position.set( 250, 200, 250 );
+  camera.position.set( 150, 200, 300 );
   camera.lookAt( 0, 0, 0 );
 
   // Scene
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog( 0xffffff, 100 );
-  //gridHelper = new THREE.GridHelper( 100, 10 );    
-  //scene.add( gridHelper );
 
-  birds = [];
-  boids = [];
-
-  for ( var i = 0; i < 15; i++ ) {
+  for ( var i = 0; i < TOTAL_BIRDS; i++ ) {
     // Boids
     boid = boids[i] = new Boid(Math.random()*200-100, Math.random()*50, Math.random()*200-100);
 
     // Birds
     geometry = new Bird();
-    material = new THREE.MeshLambertMaterial({
+    material = new THREE.MeshPhongMaterial({
         color: randomColour(),
         side: THREE.DoubleSide
         //wireframe: true
@@ -45,36 +44,8 @@ function init() {
     scene.add( bird );
   }
 
-  // Ground texture
-  plane = new THREE.PlaneGeometry( 20000, 20000 );
-  groundTexture = THREE.ImageUtils.loadTexture( 'textures/grass.jpg' );
-  groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-  groundTexture.repeat.set( 25, 25 );
-  groundTexture.anisotropy = 16;
-  groundMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x335533, 
-      specular: 0x111111,
-      map: groundTexture 
-      });
-  planeMesh = new THREE.Mesh( plane, groundMaterial );
-  planeMesh.rotation.x = - Math.PI / 2;
-  planeMesh.scale.set( 0.1, 0.1, 0.1 );
-  planeMesh.receiveShadow = true;
-  scene.add( planeMesh );
-
-  // Light
-  light = new THREE.DirectionalLight( 0xffddcc, 1.5 );
-  light.position.set( 0, 150, 10 );
-  light.castShadow = true;
-  light.shadowCameraVisible = true;
-  d = 200;
-  light.shadowCameraLeft = -d;
-  light.shadowCameraRight = d;
-  light.shadowCameraTop = d;
-  light.shadowCameraBottom = -d;
-  light.shadowCameraFar = 500;
-  scene.add( light );
-  scene.add( new THREE.AmbientLight( 0x404040 ) );
+  // Add terrain features
+  addTerrain( scene );
 
   // Renderer
   renderer = new THREE.WebGLRenderer({
@@ -126,14 +97,24 @@ function render() {
   // Render birds
   for ( var i = 0; i < birds.length; i++ ) {
     boid = boids[i];
+    // Creates clockwise motion instinct
     centripetal = new THREE.Vector3();
     centripetal.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
     centripetal.divideScalar(100);
+    // Creates homing instinct
+    home = new THREE.Vector3();
+    origin = new THREE.Vector3( 0, 30, 0 );
+    home.subVectors( origin, boid.position );
+    home.divideScalar( 50000 );
 
     // Add boid forces
     boid.keepBounded();
     boid.flock( boids );
+    for ( var j = 0; j < obstacles.length; j++ ) {
+      boid.repulse( obstacles[j] );
+    }
     boid.acceleration.add( centripetal );
+    boid.acceleration.add( home );
 
     bird = birds[i];
     bird.geometry.verticesNeedUpdate = true;

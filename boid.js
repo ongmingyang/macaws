@@ -5,7 +5,8 @@ var Boid = function (x,y,z) {
       _worldRadius = 300,
       _glideHeight = 20;
       _visionRadius = 80,
-      _maxSteerForce = 0.1,
+      _maxAlignmentForce = 0.05,
+      _maxCohesionForce = 0.1,
       _neighborhoodRadius = 100,
       _memoryIters = 40;
       _birdWeight = 0.01;
@@ -16,7 +17,7 @@ var Boid = function (x,y,z) {
 
   var oldVelocities = [];
   var oldBanks = [];
-  // Compute average values
+  // Compute average values for smoother animation
   for ( i = 0; i < _memoryIters; i++ ) {
     oldVelocities.push( this.velocity.clone() );
     oldBanks.push( 0 ); // Bank angle
@@ -72,6 +73,29 @@ var Boid = function (x,y,z) {
     steer.sub( target );
     steer.divideScalar( this.position.distanceToSquared( target ) );
     this.acceleration.add( steer ); // persistent force vector
+  }
+
+  // Adds impulse vector given obstacle within half sight 
+  // TODO: all obstacles are trees, so calculate 2D distance
+  this.repulse = function ( target ) {
+    proj_target = target.position.clone().projectOnPlane( new THREE.Vector3( 0, 1, 0 ) );
+    proj_this = this.position.clone().projectOnPlane( new THREE.Vector3( 0, 1, 0 ) );
+    distance = proj_this.distanceTo( proj_target );
+
+    if ( distance < _visionRadius / 2 ) {
+      steer = new THREE.Vector3();
+      steer.subVectors( proj_this, proj_target );
+      steer.divideScalar( 2 * distance * distance );
+      this.acceleration.add( steer );
+    }
+
+    if ('avoidRadius' in target) {
+      if ( distance < target.avoidRadius + 5 ) {
+        steer = new THREE.Vector3();
+        steer.subVectors( proj_this, proj_target );
+        this.acceleration.add( steer );
+      }
+    }
   }
 
   // Add impulse force vector to boid
@@ -141,7 +165,7 @@ var Boid = function (x,y,z) {
     velSum.divideScalar( count );
 
     var l = velSum.length();
-    if ( l > _maxSteerForce ) velSum.divideScalar( l / _maxSteerForce );
+    if ( l > _maxAlignmentForce ) velSum.divideScalar( l / _maxAlignmentForce );
 
     this.acceleration.add( velSum );
   }
@@ -173,7 +197,7 @@ var Boid = function (x,y,z) {
     posSum.sub( this.position );
 
     var l = posSum.length();
-    if ( l > _maxSteerForce ) posSum.divideScalar( l / _maxSteerForce );
+    if ( l > _maxCohesionForce ) posSum.divideScalar( l / _maxCohesionForce );
 
     this.acceleration.add( posSum );
   }
