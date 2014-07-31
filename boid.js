@@ -1,16 +1,16 @@
-var Boid = function () {
+var Boid = function (x,y,z) {
 
   var _maxSpeed = 0.5,
       _maxAcceleration = 0.5;
       _worldRadius = 300,
-      _glideHeight = 10;
-      _visionRadius = 100,
+      _glideHeight = 20;
+      _visionRadius = 80,
       _maxSteerForce = 0.1,
       _neighborhoodRadius = 100,
       _memoryIters = 40;
       _birdWeight = 0.01;
 
-  this.position = new THREE.Vector3(0, 10, 0); // initialise position
+  this.position = new THREE.Vector3(x,y,z); // initialise position
   this.velocity = new THREE.Vector3(1, 0, 0); // initialise velocity
   this.acceleration = new THREE.Vector3( 0, 0, 0 ); // initialise acceleration
 
@@ -156,7 +156,7 @@ var Boid = function () {
     posSum = new THREE.Vector3(),
     count = 0;
 
-    for ( var i = 0, il = boids.length; i < il; i ++ ) {
+    for ( var i = 0; i < boids.length; i++ ) {
       if ( Math.random() > 0.6 ) continue;
       boid = boids[ i ];
       distance = boid.position.distanceTo( this.position );
