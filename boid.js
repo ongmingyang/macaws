@@ -76,7 +76,7 @@ var Boid = function (x,y,z) {
   }
 
   // Adds impulse vector given obstacle within half sight 
-  // TODO: all obstacles are trees, so calculate 2D distance
+  // TODO: all obstacles are trees, so this only calculates 2D distance
   this.repulse = function ( target ) {
     proj_target = target.position.clone().projectOnPlane( new THREE.Vector3( 0, 1, 0 ) );
     proj_this = this.position.clone().projectOnPlane( new THREE.Vector3( 0, 1, 0 ) );
@@ -85,7 +85,7 @@ var Boid = function (x,y,z) {
     if ( distance < _visionRadius / 2 ) {
       steer = new THREE.Vector3();
       steer.subVectors( proj_this, proj_target );
-      steer.divideScalar( 2 * distance * distance );
+      steer.divideScalar( 1.5 * distance * distance );
       this.acceleration.add( steer );
     }
 
