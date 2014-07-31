@@ -1,5 +1,3 @@
-var BIRD_WEIGHT = 0.02;
-
 var Bird = function () {
 
   var scope = this;
@@ -63,7 +61,6 @@ Bird.prototype = Object.create( THREE.Geometry.prototype );
 
 function flap( bird ) {
   phase = bird.phase;
-  console.log(bird.geometry.vertices);
 
   function sign(x) {
     return x && x / Math.abs( x );
@@ -114,16 +111,13 @@ function orientate( bird, boid ) {
   bird.position.copy( boid.position );
 
   // Yaw
-  bird.rotation.y = Math.atan2( - boid.velocity.z, boid.velocity.x );
+  bird.rotation.y = Math.atan2( - boid.averageVelocity.z, boid.averageVelocity.x );
 
   // Pitch
-  bird.rotation.z = Math.asin( boid.velocity.y / boid.velocity.length() );
+  bird.rotation.z = Math.asin( boid.averageVelocity.y / boid.averageVelocity.length() );
 
   // Bank
-  centripetal_vector = new THREE.Vector3();
-  centripetal_vector.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
-  centrifugal_scalar = boid.acceleration.dot( centripetal_vector.normalize() );
-  bird.rotation.x = Math.atan2( centrifugal_scalar, BIRD_WEIGHT );
+  bird.rotation.x = boid.averageBank;
 
   // Yaw and Pitch before Banking
   bird.rotation.order = 'YZX';

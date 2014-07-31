@@ -111,14 +111,19 @@ function render() {
     centripetal = new THREE.Vector3();
     centripetal.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
     centripetal.divideScalar(80);
+
+    // Add boid forces
     boid.keepBounded();
     boid.flock( boids );
-    boid.move( centripetal );
+    boid.acceleration.add( centripetal );
 
     bird = birds[i];
     bird.geometry.verticesNeedUpdate = true;
-    orientate( bird, boid );
     bird.phase = (bird.phase + 0.1) % 62.83; // 20 pi
+
+    // Compute movements
+    orientate( bird, boid );
+    boid.move();
     flap(bird);
   }
 

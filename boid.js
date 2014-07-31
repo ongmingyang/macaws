@@ -1,32 +1,65 @@
 var Boid = function () {
 
   var _maxSpeed = 0.5,
-      _maxAcceleration = 1,
-      _worldRadius = 500,
+      _maxAcceleration = 0.5;
+      _worldRadius = 300,
       _glideHeight = 10;
       _visionRadius = 100,
       _maxSteerForce = 0.1,
-      _neighborhoodRadius = 100;
+      _neighborhoodRadius = 100,
+      _memoryIters = 40;
+      _birdWeight = 0.01;
 
   this.position = new THREE.Vector3(0, 10, 0); // initialise position
   this.velocity = new THREE.Vector3(1, 0, 0); // initialise velocity
-  this.acceleration = new THREE.Vector3( 0, 0, 0 );
+  this.acceleration = new THREE.Vector3( 0, 0, 0 ); // initialise acceleration
+
+  var oldVelocities = [];
+  var oldBanks = [];
+  // Compute average values
+  for ( i = 0; i < _memoryIters; i++ ) {
+    oldVelocities.push( this.velocity.clone() );
+    oldBanks.push( 0 ); // Bank angle
+  }
+  this.averageVelocity = this.velocity.clone(); 
+  this.averageBank = 0;
 
   // boid moves
-  this.move = function ( impulse ) {
-
-    if ( impulse ) {
-      this.acceleration.add( impulse );
-    }
+  this.move = function () {
 
     this.velocity.add( this.acceleration );
-    l = this.velocity.length();
 
+    l = this.velocity.length();
     if ( l > _maxSpeed ) {
       this.velocity.divideScalar( l / _maxSpeed );
     }
 
     this.position.add( this.velocity );
+
+    // Compute average velocities and banks for orientation code
+    oldVelocities.push( this.velocity.clone() );
+    this.averageVelocity.multiplyScalar( _memoryIters );
+    this.averageVelocity.add( this.velocity );
+    this.averageVelocity.sub( oldVelocities.shift() );
+    this.averageVelocity.divideScalar( _memoryIters );
+
+    l = this.acceleration.length();
+    if ( l > _maxAcceleration ) {
+      this.acceleration.divideScalar( l / _maxAcceleration );
+    }
+
+    centripetal_vector = new THREE.Vector3();
+    centripetal_vector.crossVectors( this.averageVelocity, new THREE.Vector3( 0, 1, 0 ) );
+    centripetal_vector.normalize();
+    centrifugal_scalar = this.acceleration.dot( centripetal_vector );
+    oldBanks.push( Math.atan2( centrifugal_scalar, _birdWeight ) );
+    oldBanks.shift();
+
+    for ( var i = 0; i < oldBanks.length; i++ ) {
+      this.averageBank += oldBanks[i];
+    }
+    this.averageBank = this.averageBank / oldBanks.length;
+
     this.acceleration.set( 0, 0, 0 ); // Need to re-render forces every render loop
     //this.acceleration.divideScalar( 2 ); // Exponential drag
 
