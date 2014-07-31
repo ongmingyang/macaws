@@ -62,8 +62,8 @@ var Bird = function () {
 Bird.prototype = Object.create( THREE.Geometry.prototype );
 
 function flap( bird ) {
-
-  phase = bird.phase
+  phase = bird.phase;
+  console.log(bird.geometry.vertices);
 
   function sign(x) {
     return x && x / Math.abs( x );

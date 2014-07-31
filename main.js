@@ -3,7 +3,8 @@ SCREEN_HEIGHT = window.innerHeight,
 SCREEN_WIDTH_HALF = SCREEN_WIDTH  / 2,
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2;
 
-var camera, scene, renderer, light, bird, boid, plane;
+var camera, scene, renderer, light, plane,
+    bird, birds, boid, boids;
 
 var controls, gridHelper;
 
@@ -21,23 +22,28 @@ function init() {
   // Scene
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog( 0xffffff, 100 );
-  gridHelper = new THREE.GridHelper( 100, 10 );    
+  //gridHelper = new THREE.GridHelper( 100, 10 );    
   //scene.add( gridHelper );
 
-  // Birds
-  geometry = new Bird();
-  material = new THREE.MeshLambertMaterial({
-      color: 0x3366ff,
-      side: THREE.DoubleSide
-      //wireframe: true
-      });
-  bird = new THREE.Mesh( geometry, material );
-  bird.castShadow = true;
-  bird.phase = 0;
-  scene.add( bird );
+  birds = [];
+  boids = [];
 
-  // Boids
-  boid = new Boid();
+  for ( var i = 0; i < 15; i++ ) {
+    // Boids
+    boid = boids[i] = new Boid();
+
+    // Birds
+    geometry = new Bird();
+    material = new THREE.MeshLambertMaterial({
+        color: 0x3366ff,
+        side: THREE.DoubleSide
+        //wireframe: true
+        });
+    bird = birds[i] = new THREE.Mesh( geometry, material );
+    bird.castShadow = true;
+    bird.phase = Math.random() * 62.83;
+    scene.add( bird );
+  }
 
   // Ground texture
   plane = new THREE.PlaneGeometry( 20000, 20000 );
@@ -98,24 +104,23 @@ function onDocumentMouseMove(event) {
 function render() {
   requestAnimationFrame(render);
   renderer.render(scene, camera);
-  bird.geometry.verticesNeedUpdate = true;
 
   // Render birds
-  if (Math.random() > 0.99) {
-    x = Math.random()/500 - 1/1000;
-    y = Math.random()/500 - 1/1000;
-    z = Math.random()/500 - 1/1000;
-  } else {
-    x = y = z = 0;
-  }
+  for ( var i = 0; i < birds.length; i++ ) {
+    boid = boids[i];
+    centripetal = new THREE.Vector3();
+    centripetal.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
+    centripetal.divideScalar(80);
+    boid.keepBounded();
+    boid.flock( boids );
+    boid.move( centripetal );
 
-  centripetal = new THREE.Vector3();
-  centripetal.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
-  centripetal.divideScalar(80);
-  boid.move( centripetal );
-  orientate( bird, boid );
-  bird.phase = (bird.phase + 0.05) % 62.83; // 20 pi
-  flap(bird);
+    bird = birds[i];
+    bird.geometry.verticesNeedUpdate = true;
+    orientate( bird, boid );
+    bird.phase = (bird.phase + 0.1) % 62.83; // 20 pi
+    flap(bird);
+  }
 
   // Render camera
   /*
