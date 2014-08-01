@@ -20,6 +20,12 @@ var controls, gridHelper;
 
 var mouseX = mouseY = 0;
 
+// Initialize vectors used in render loop
+var centripetal = new THREE.Vector3(),
+    home = new THREE.Vector3(),
+    origin = new THREE.Vector3( 0, 30, 0 ),
+    up = new THREE.Vector3( 0, 1, 0 );
+
 init();
 render();
 
@@ -103,16 +109,13 @@ function onDocumentMouseMove(event) {
 function render() {
   requestAnimationFrame(render);
   renderer.render(scene, camera);
-  centripetal = new THREE.Vector3();
-  home = new THREE.Vector3();
-  origin = new THREE.Vector3( 0, 30, 0 );
 
   // Render birds
   for ( var i = 0; i < birds.length; i++ ) {
     boid = boids[i];
 
     // Creates clockwise motion instinct
-    centripetal.crossVectors( boid.velocity, new THREE.Vector3( 0, 1, 0 ) );
+    centripetal.crossVectors( boid.velocity, up );
     centripetal.divideScalar(100);
 
     // Creates homing instinct

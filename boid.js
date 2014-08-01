@@ -20,6 +20,12 @@ var Boid = function (x,y,z) {
       _memoryIters = 40;
       _birdWeight = 0.01;
 
+  // Initialise vectors
+  var up_vector = new THREE.Vector3( 0, 1, 0 ),
+      centripetal_vector = new THREE.Vector3(),
+      steer = new THREE.Vector3(),
+      vector = new THREE.Vector3();
+
   this.position = new THREE.Vector3(x,y,z); // initialise position
   this.velocity = new THREE.Vector3(1, 0, 0); // initialise velocity
   this.acceleration = new THREE.Vector3( 0, 0, 0 ); // initialise acceleration
@@ -58,8 +64,7 @@ var Boid = function (x,y,z) {
       this.acceleration.divideScalar( l / _maxAcceleration );
     }
 
-    centripetal_vector = new THREE.Vector3();
-    centripetal_vector.crossVectors( this.averageVelocity, new THREE.Vector3( 0, 1, 0 ) );
+    centripetal_vector.crossVectors( this.averageVelocity, up_vector );
     centripetal_vector.normalize();
     centrifugal_scalar = this.acceleration.dot( centripetal_vector );
     oldBanks.push( Math.atan2( centrifugal_scalar, _birdWeight ) );
@@ -77,7 +82,6 @@ var Boid = function (x,y,z) {
 
   // Adds impulse vector given target to avoid
   this.avoid = function ( target ) {
-    steer = new THREE.Vector3();
     steer.copy( this.position );
     steer.sub( target );
     steer.divideScalar( this.position.distanceToSquared( target ) );
@@ -87,12 +91,11 @@ var Boid = function (x,y,z) {
   // Adds impulse vector given obstacle within half sight 
   // TODO: all obstacles are trees, so this only calculates 2D distance
   this.repulse = function ( target ) {
-    proj_target = target.position.clone().projectOnPlane( new THREE.Vector3( 0, 1, 0 ) );
-    proj_this = this.position.clone().projectOnPlane( new THREE.Vector3( 0, 1, 0 ) );
+    proj_target = target.position.clone().projectOnPlane( up_vector );
+    proj_this = this.position.clone().projectOnPlane( up_vector );
     distance = proj_this.distanceTo( proj_target );
 
     if ( distance < _visionRadius / 2 ) {
-      steer = new THREE.Vector3();
       steer.subVectors( proj_this, proj_target );
       steer.divideScalar( 1.5 * distance * distance );
       this.acceleration.add( steer );
@@ -100,7 +103,6 @@ var Boid = function (x,y,z) {
 
     if ('avoidRadius' in target) {
       if ( distance < target.avoidRadius + 5 ) {
-        steer = new THREE.Vector3();
         steer.subVectors( proj_this, proj_target );
         this.acceleration.add( steer );
       }
@@ -111,7 +113,6 @@ var Boid = function (x,y,z) {
   this.keepBounded = function () {
 
     radius = _worldRadius; // Manhatten radius
-    vector = new THREE.Vector3();
 
     vector.set( - radius, this.position.y, this.position.z );
     this.avoid( vector );
@@ -221,14 +222,14 @@ var Boid = function (x,y,z) {
     posSum = new THREE.Vector3( 0, 0, 0 ),
     repulse = new THREE.Vector3();
 
-    for ( var i = 0, il = boids.length; i < il; i ++ ) {
+    for ( var i = 0; i < boids.length; i++ ) {
 
       if ( Math.random() > 0.6 ) continue;
 
       boid = boids[ i ];
       distance = boid.position.distanceTo( this.position );
 
-      if ( distance > 0 && distance <= _neighborhoodRadius ) {
+      if ( distance > 0 && distance < _neighborhoodRadius ) {
         repulse.subVectors( this.position, boid.position );
         repulse.normalize();
         repulse.divideScalar( distance );
