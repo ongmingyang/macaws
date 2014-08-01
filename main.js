@@ -1,3 +1,12 @@
+/*
+  Taming Macaws
+  Adapted from http://threejs.org/examples/#canvas_geometry_birds
+  Available on https://github.com/ongmingyang/macaws
+
+  Ong Ming Yang <me@ongmingyang.com>
+  2014
+*/
+
 var SCREEN_WIDTH = window.innerWidth,
 SCREEN_HEIGHT = window.innerHeight,
 SCREEN_WIDTH_HALF = SCREEN_WIDTH  / 2,
@@ -40,6 +49,7 @@ function init() {
         });
     bird = birds[i] = new THREE.Mesh( geometry, material );
     bird.castShadow = true;
+    bird.receiveShadow = true;
     bird.phase = Math.random() * 62.83;
     scene.add( bird );
   }

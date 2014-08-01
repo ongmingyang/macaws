@@ -1,3 +1,12 @@
+/*
+  Taming Macaws
+  Adapted from http://threejs.org/examples/#canvas_geometry_birds
+  Available on https://github.com/ongmingyang/macaws
+
+  Ong Ming Yang <me@ongmingyang.com>
+  2014
+*/
+
 function addTerrain ( scene ) {
   // Fog
   scene.fog = new THREE.Fog( 0xffffff, 100 );
@@ -6,7 +15,7 @@ function addTerrain ( scene ) {
 
   // Light
   light = new THREE.DirectionalLight( 0xffddcc, 1.5 );
-  light.position.set( 0, 150, 10 );
+  light.position.set( -150, 150, 0 );
   light.castShadow = true;
   //light.shadowCameraVisible = true;
   d = 200;

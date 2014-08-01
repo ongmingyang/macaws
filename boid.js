@@ -1,3 +1,12 @@
+/*
+  Taming Macaws
+  Adapted from http://threejs.org/examples/#canvas_geometry_birds
+  Available on https://github.com/ongmingyang/macaws
+
+  Ong Ming Yang <me@ongmingyang.com>
+  2014
+*/
+
 var Boid = function (x,y,z) {
 
   var _maxSpeed = 0.5,
