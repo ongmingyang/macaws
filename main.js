@@ -74,6 +74,11 @@ function init() {
 
   // Browser controls
   controls = new THREE.OrbitControls( camera, renderer.domElement );
+  controls.minDistance = 100;
+  controls.maxDistance = 800;
+  controls.maxPolarAngle = Math.PI / 2 - 0.1;
+  controls.noKeys = true;
+  controls.noPan = true;
   window.addEventListener( 'resize', onWindowResize, false );
   document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
