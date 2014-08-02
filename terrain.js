@@ -28,7 +28,7 @@ function addTerrain ( scene ) {
   scene.add( new THREE.AmbientLight( 0x404040 ) );
 
   // Ground texture
-  plane = new THREE.PlaneGeometry( 20000, 20000 );
+  plane = new THREE.PlaneGeometry( 2000, 2000 );
   groundTexture = THREE.ImageUtils.loadTexture( 'textures/grass.jpg' );
   groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
   groundTexture.repeat.set( 25, 25 );
@@ -40,7 +40,6 @@ function addTerrain ( scene ) {
       });
   planeMesh = new THREE.Mesh( plane, groundMaterial );
   planeMesh.rotation.x = - Math.PI / 2;
-  planeMesh.scale.set( 0.1, 0.1, 0.1 );
   planeMesh.receiveShadow = true;
   scene.add( planeMesh );
 
