@@ -9,16 +9,12 @@
 
 var SCREEN_WIDTH = window.innerWidth,
 SCREEN_HEIGHT = window.innerHeight,
-SCREEN_WIDTH_HALF = SCREEN_WIDTH  / 2,
-SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2,
 TOTAL_BIRDS = 15;
 
 var camera, scene, renderer, light, plane,
     bird, birds, boid, boids, obstacles;
 
 var controls, gridHelper;
-
-var mouseX = mouseY = 0;
 
 // Initialize vectors used in render loop
 var centripetal = new THREE.Vector3(),
@@ -80,7 +76,6 @@ function init() {
   controls.noKeys = true;
   controls.noPan = true;
   window.addEventListener( 'resize', onWindowResize, false );
-  document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
 }
 
@@ -104,11 +99,6 @@ function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize( window.innerWidth, window.innerHeight );
-}
-
-function onDocumentMouseMove(event) {
-  mouseX = ( event.clientX - SCREEN_WIDTH_HALF );
-  mouseY = ( event.clientY - SCREEN_HEIGHT_HALF );
 }
 
 function render() {
@@ -145,11 +135,4 @@ function render() {
     boid.move();
     flap(bird);
   }
-
-  // Render camera
-  /*
-  camera.position.x += ( mouseX - camera.position.x ) * .03;
-  camera.position.y += ( - mouseY - camera.position.y ) * .03;
-  camera.lookAt( bird.position );
-  */
 }
